@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAT Ustoz — AI Tutor</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,600;1,400&display=swap');
+
+:root {
+  --bg: #F7F5F0;
+  --white: #FFFFFF;
+  --ink: #1A1A2E;
+  --ink2: #4A4A6A;
+  --ink3: #8A8AAA;
+  --line: #E2DFD8;
+  --primary: #2D5BE3;
+  --primary-light: #EEF2FF;
+  --green: #059669;
+  --green-light: #ECFDF5;
+  --red: #DC2626;
+  --red-light: #FEF2F2;
+  --gold: #D97706;
+  --gold-light: #FFFBEB;
+  --radius: 12px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* ── NAV ── */
+.nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.nav-logo { font-family:'Lora',serif; font-size:18px; font-weight:600; color:var(--ink); }
+.nav-logo span { color:var(--primary); }
+.nav-tabs { display:flex; gap:4px; }
+.nav-tab {
+  padding:6px 14px;
+  border-radius:8px;
+  border:none;
+  background:transparent;
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  color:var(--ink2);
+  cursor:pointer;
+  transition:all .15s;
+}
+.nav-tab.active { background:var(--primary-light); color:var(--primary); }
+.nav-tab:hover:not(.active) { background:var(--bg); }
+.xp-badge {
+  display:flex; align-items:center; gap:6px;
+  background:var(--gold-light); border:1px solid #FDE68A;
+  border-radius:99px; padding:4px 12px;
+  font-size:12px; font-weight:600; color:var(--gold);
+}
+
+/* ── LAYOUT ── */
+.page { display:none; padding:24px 20px 80px; max-width:720px; margin:0 auto; }
+.page.active { display:block; }
+
+/* ── HOME ── */
+.welcome-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius:16px;
+  padding:28px 24px;
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+.avatar {
+  width:56px; height:56px; min-width:56px;
+  background:var(--primary);
+  border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px;
+}
+.welcome-card h2 { font-family:'Lora',serif; font-size:20px; margin-bottom:4px; }
+.welcome-card p { font-size:13px; color:var(--ink2); line-height:1.5; }
+
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+.stat-box {
+  background:var(--white); border:1px solid var(--line);
+  border-radius:var(--radius); padding:16px;
+  text-align:center;
+}
+.stat-num { font-size:26px; font-weight:700; color:var(--primary); font-family:'Lora',serif; }
+.stat-label { font-size:11px; color:var(--ink3); margin-top:2px; text-transform:uppercase; letter-spacing:.8px; }
+
+.section-head { font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--ink3); margin-bottom:12px; }
+
+.module-list { display:grid; gap:10px; }
+.module-card {
+  background:var(--white); border:1px solid var(--line);
+  border-radius:var(--radius); padding:16px 18px;
+  display:flex; align-items:center; gap:14px;
+  cursor:pointer; transition:all .15s;
+}
+.module-card:hover { border-color:var(--primary); transform:translateY(-1px); box-shadow:0 4px 16px rgba(45,91,227,.08); }
+.module-icon {
+  width:42px; height:42px; min-width:42px;
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+}
+.module-body { flex:1; }
+.module-title { font-size:15px; font-weight:600; margin-bottom:2px; }
+.module-sub { font-size:12px; color:var(--ink3); }
+.module-arrow { color:var(--ink3); font-size:18px; }
+.mod-reading { background:#EEF2FF; }
+.mod-grammar { background:#F0FDF4; }
+.mod-vocab { background:#FFFBEB; }
+.mod-test { background:#FFF1F2; }
+
+/* ── LESSON PAGE ── */
+.lesson-header {
+  display:flex; align-items:center; gap:12px; margin-bottom:20px;
+}
+.back-btn {
+  width:36px; height:36px;
+  background:var(--white); border:1px solid var(--line);
+  border-radius:9px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:18px; color:var(--ink2); transition:.15s;
+}
+.back-btn:hover { border-color:var(--primary); color:var(--primary); }
+.lesson-title { font-family:'Lora',serif; font-size:20px; font-weight:600; }
+
+/* AI CHAT BOX */
+.ai-box {
+  background:var(--white); border:1px solid var(--line);
+  border-radius:16px; overflow:hidden; margin-bottom:16px;
+}
+.ai-messages {
+  min-height:200px;
+  max-height:420px;
+  overflow-y:auto;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.msg { display:flex; gap:10px; align-items:flex-start; }
+.msg-avatar {
+  width:30px; height:30px; min-width:30px;
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px;
+}
+.msg.ai .msg-avatar { background:var(--primary); }
+.msg.user .msg-avatar { background:var(--ink); }
+.msg-bubble {
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:0 12px 12px 12px;
+  padding:12px 14px; font-size:14px; line-height:1.6;
+  max-width:100%;
+}
+.msg.user { flex-direction:row-reverse; }
+.msg.user .msg-bubble {
+  background:var(--primary-light); border-color:#C7D7FF;
+  border-radius:12px 0 12px 12px;
+}
+.msg-bubble strong { color:var(--primary); }
+.msg-bubble .correct { color:var(--green); font-weight:600; }
+.msg-bubble .wrong { color:var(--red); font-weight:600; }
+.msg-bubble .highlight { background:#FEF9C3; padding:1px 4px; border-radius:3px; }
+
+.ai-input-row {
+  padding:12px 16px;
+  border-top:1px solid var(--line);
+  display:flex; gap:8px; align-items:center;
+}
+.ai-input {
+  flex:1; padding:10px 14px;
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:10px; font-family:'Inter',sans-serif; font-size:14px;
+  outline:none; resize:none; height:42px;
+  transition:.15s;
+}
+.ai-input:focus { border-color:var(--primary); background:var(--white); }
+.send-btn {
+  width:42px; height:42px;
+  background:var(--primary); border:none; border-radius:10px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:.15s; color:white; font-size:18px;
+}
+.send-btn:hover { background:#1E4BC7; }
+.send-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+.quick-btns { display:flex; flex-wrap:wrap; gap:8px; padding:0 16px 12px; }
+.quick-btn {
+  padding:6px 14px; background:var(--bg); border:1px solid var(--line);
+  border-radius:99px; font-size:12px; font-weight:500; color:var(--ink2);
+  cursor:pointer; transition:.15s; font-family:'Inter',sans-serif;
+}
+.quick-btn:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-light); }
+
+/* VOCAB CARDS */
+.vocab-card {
+  background:var(--white); border:1px solid var(--line);
+  border-radius:var(--radius); padding:20px;
+  margin-bottom:10px; cursor:pointer;
+  transition:all .15s;
+}
+.vocab-card:hover { border-color:var(--primary); }
+.vocab-word { font-family:'Lora',serif; font-size:22px; font-weight:600; margin-bottom:4px; }
+.vocab-pron { font-size:12px; color:var(--ink3); margin-bottom:8px; font-style:italic; }
+.vocab-type { display:inline-block; font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:2px 8px; border-radius:99px; background:var(--primary-light); color:var(--primary); margin-bottom:10px; }
+.vocab-def { font-size:14px; color:var(--ink2); line-height:1.6; margin-bottom:8px; }
+.vocab-ex { font-size:13px; color:var(--ink3); font-style:italic; line-height:1.5; border-left:2px solid var(--primary); padding-left:10px; }
+.vocab-hidden { display:none; }
+.vocab-card.revealed .vocab-hidden { display:block; }
+.vocab-card.revealed .vocab-tap { display:none; }
+.vocab-tap { font-size:12px; color:var(--ink3); margin-top:8px; }
+.vocab-known-btn {
+  margin-top:12px; padding:8px 16px;
+  background:var(--green-light); border:1px solid #A7F3D0;
+  border-radius:8px; color:var(--green); font-size:12px; font-weight:600;
+  cursor:pointer; font-family:'Inter',sans-serif; transition:.15s;
+}
+.vocab-known-btn:hover { background:var(--green); color:white; }
+.vocab-card.known { opacity:.4; border-color:var(--green); }
+
+/* PROGRESS BAR */
+.prog-bar { height:6px; background:var(--line); border-radius:99px; overflow:hidden; margin:8px 0 4px; }
+.prog-fill { height:100%; background:var(--primary); border-radius:99px; transition:width .4s; }
+
+/* LOADING DOTS */
+.dots { display:flex; gap:4px; padding:4px 0; }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--ink3); animation:blink 1.2s infinite; }
+.dot:nth-child(2) { animation-delay:.2s; }
+.dot:nth-child(3) { animation-delay:.4s; }
+@keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:var(--ink); color:white; padding:12px 20px; border-radius:12px;
+  font-size:13px; font-weight:500; z-index:999;
+  transition:transform .3s; pointer-events:none;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* RESPONSIVE */
+@media(max-width:500px){
+  .stats-row { grid-template-columns:repeat(3,1fr); gap:8px; }
+  .stat-num { font-size:20px; }
+  .nav-tabs { gap:2px; }
+  .nav-tab { padding:5px 10px; font-size:12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">SAT <span>Ustoz</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="goPage('home',this)">🏠</button>
+    <button class="nav-tab" onclick="goPage('reading',this)">📖</button>
+    <button class="nav-tab" onclick="goPage('grammar',this)">✍️</button>
+    <button class="nav-tab" onclick="goPage('vocab',this)">📚</button>
+    <button class="nav-tab" onclick="goPage('test',this)">🎯</button>
+  </div>
+  <div class="xp-badge">⭐ <span id="xpCount">0</span> XP</div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="welcome-card">
+    <div class="avatar">🎓</div>
+    <div>
+      <h2>Assalomu alaykum!</h2>
+      <p>Men sening shaxsiy SAT ustozingman. Bugun ham birga o'rganamiz. Hozirgi maqsad: <strong>400 → 700+</strong></p>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-num" id="statDays">0</div>
+      <div class="stat-label">Kun streak</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="statWords">0</div>
+      <div class="stat-label">So'zlar</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="statScore">0%</div>
+      <div class="stat-label">O'rtacha ball</div>
+    </div>
+  </div>
+
+  <div class="section-head">Bugun nima o'rganamiz?</div>
+  <div class="module-list">
+    <div class="module-card" onclick="goPageBtn('reading')">
+      <div class="module-icon mod-reading">📖</div>
+      <div class="module-body">
+        <div class="module-title">Reading Comprehension</div>
+        <div class="module-sub">Matn tahlil, savol strategiyasi, tez o'qish</div>
+      </div>
+      <div class="module-arrow">›</div>
+    </div>
+    <div class="module-card" onclick="goPageBtn('grammar')">
+      <div class="module-icon mod-grammar">✍️</div>
+      <div class="module-body">
+        <div class="module-title">Grammar & Writing</div>
+        <div class="module-sub">SAT grammatika qoidalari va amaliyot</div>
+      </div>
+      <div class="module-arrow">›</div>
+    </div>
+    <div class="module-card" onclick="goPageBtn('vocab')">
+      <div class="module-icon mod-vocab">📚</div>
+      <div class="module-body">
+        <div class="module-title">Vocabulary</div>
+        <div class="module-sub">300 ta asosiy SAT so'zi — bugun 10 tasi</div>
+      </div>
+      <div class="module-arrow">›</div>
+    </div>
+    <div class="module-card" onclick="goPageBtn('test')">
+      <div class="module-icon mod-test">🎯</div>
+      <div class="module-body">
+        <div class="module-title">Mini Test</div>
+        <div class="module-sub">Real SAT uslubidagi aralash savollar</div>
+      </div>
+      <div class="module-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- READING -->
+<div class="page" id="page-reading">
+  <div class="lesson-header">
+    <div class="back-btn" onclick="goPageBtn('home')">‹</div>
+    <div class="lesson-title">📖 Reading Comprehension</div>
+  </div>
+  <div class="ai-box">
+    <div class="ai-messages" id="reading-msgs"></div>
+    <div class="quick-btns" id="reading-quick">
+      <button class="quick-btn" onclick="sendQuick('reading','Yangi passage va savollar ber')">📄 Yangi passage</button>
+      <button class="quick-btn" onclick="sendQuick('reading','Main idea savolini tushuntir')">💡 Main idea nima?</button>
+      <button class="quick-btn" onclick="sendQuick('reading','Evidence savoli qanday yechiladi?')">🔍 Evidence savoli</button>
+      <button class="quick-btn" onclick="sendQuick('reading','Tone va purpose savollarini tushuntir')">🎨 Tone & Purpose</button>
+    </div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="reading-input" placeholder="Savolingizni yozing yoki yuqoridagi tugmalardan tanlang..." onkeydown="handleKey(event,'reading')"></textarea>
+      <button class="send-btn" id="reading-send" onclick="sendMsg('reading')">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- GRAMMAR -->
+<div class="page" id="page-grammar">
+  <div class="lesson-header">
+    <div class="back-btn" onclick="goPageBtn('home')">‹</div>
+    <div class="lesson-title">✍️ Grammar & Writing</div>
+  </div>
+  <div class="ai-box">
+    <div class="ai-messages" id="grammar-msgs"></div>
+    <div class="quick-btns" id="grammar-quick">
+      <button class="quick-btn" onclick="sendQuick('grammar','Subject-verb agreement haqida savol ber')">📝 Subject-Verb</button>
+      <button class="quick-btn" onclick="sendQuick('grammar','Punctuation (vergul, nuqtali vergul) qoidalarini o\'rgat')">, Punctuation</button>
+      <button class="quick-btn" onclick="sendQuick('grammar','Parallel structure savollari ber')">⚖️ Parallel</button>
+      <button class="quick-btn" onclick="sendQuick('grammar','Pronoun agreement haqida o\'rgat')">🔄 Pronoun</button>
+      <button class="quick-btn" onclick="sendQuick('grammar','Transition words (however, therefore) qachon ishlatiladi?')">🔗 Transitions</button>
+    </div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="grammar-input" placeholder="Savolingizni yozing..." onkeydown="handleKey(event,'grammar')"></textarea>
+      <button class="send-btn" id="grammar-send" onclick="sendMsg('grammar')">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOCAB -->
+<div class="page" id="page-vocab">
+  <div class="lesson-header">
+    <div class="back-btn" onclick="goPageBtn('home')">‹</div>
+    <div class="lesson-title">📚 Vocabulary</div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:13px;font-weight:600;">Bugungi progress</span>
+      <span style="font-size:12px;color:var(--ink3);" id="vocabProgressLabel">0 / 10 so'z</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="vocabProgressBar" style="width:0%"></div></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <button class="quick-btn" style="flex:1;text-align:center;" onclick="loadVocab('today')">📅 Bugungi 10 so'z</button>
+    <button class="quick-btn" style="flex:1;text-align:center;" onclick="loadVocab('quiz')">🧠 So'z testi</button>
+    <button class="quick-btn" style="flex:1;text-align:center;" onclick="loadVocab('review')">🔄 Takrorlash</button>
+  </div>
+
+  <div id="vocabContent"></div>
+</div>
+
+<!-- TEST -->
+<div class="page" id="page-test">
+  <div class="lesson-header">
+    <div class="back-btn" onclick="goPageBtn('home')">‹</div>
+    <div class="lesson-title">🎯 Mini Test</div>
+  </div>
+  <div class="ai-box">
+    <div class="ai-messages" id="test-msgs"></div>
+    <div class="quick-btns" id="test-quick">
+      <button class="quick-btn" onclick="sendQuick('test','5 ta aralash SAT savoli ber (reading+grammar)')">🎲 5 ta aralash savol</button>
+      <button class="quick-btn" onclick="sendQuick('test','Faqat grammar dan 5 ta savol ber')">✍️ Grammar testi</button>
+      <button class="quick-btn" onclick="sendQuick('test','Faqat reading dan savol ber')">📖 Reading testi</button>
+      <button class="quick-btn" onclick="sendQuick('test','Mening xatolarimni tahlil qil va maslahat ber')">📊 Xatolarim</button>
+    </div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="test-input" placeholder="Javobingizni yozing (masalan: A, B, C yoki D)..." onkeydown="handleKey(event,'test')"></textarea>
+      <button class="send-btn" id="test-send" onclick="sendMsg('test')">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+const ST = JSON.parse(localStorage.getItem('sat_tutor_v3') || '{}');
+ST.xp = ST.xp || 0;
+ST.streak = ST.streak || 0;
+ST.wordsKnown = ST.wordsKnown || [];
+ST.scores = ST.scores || [];
+ST.lastDay = ST.lastDay || '';
+ST.chats = ST.chats || { reading:[], grammar:[], test:[] };
+
+function save() { localStorage.setItem('sat_tutor_v3', JSON.stringify(ST)); }
+
+// ── XP ──
+function addXP(n) {
+  ST.xp += n; save();
+  document.getElementById('xpCount').textContent = ST.xp;
+  showToast(`+${n} XP! 🌟`);
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── PAGES ──
+function goPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'vocab') { loadVocab('today'); }
+  updateStats();
+}
+function goPageBtn(id) {
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = {home:0,reading:1,grammar:2,vocab:3,test:4};
+  goPage(id, tabs[map[id]]);
+}
+
+// ── STATS ──
+function updateStats() {
+  document.getElementById('xpCount').textContent = ST.xp;
+  document.getElementById('statWords').textContent = ST.wordsKnown.length;
+  const avg = ST.scores.length ? Math.round(ST.scores.reduce((a,b)=>a+b,0)/ST.scores.length) : 0;
+  document.getElementById('statScore').textContent = avg + '%';
+  document.getElementById('statDays').textContent = ST.streak;
+}
+
+// ── SYSTEM PROMPTS ──
+const SYSTEMS = {
+  reading: `Sen SAT Reading bo'limini o'qituvchi tajribali ustozsan. Foydalanuvchi o'zbek tilida gaplashadi, sen ham o'zbek tilida javob ber.
+
+QOIDALAR:
+- Haqiqiy SAT uslubida qisqa (150-200 so'z) passage ber
+- Passage dan 3-4 ta real SAT savolini ber (A/B/C/D variantlar bilan)
+- Savollar turi: main idea, vocabulary in context, evidence-based, inference
+- Foydalanuvchi javob berganda: to'g'ri/noto'g'ri de, tushuntir, qaysi strategiyani ishlatish kerakligini ayt
+- Har doim o'zbek tilida tushuntir, lekin SAT termini inglizcha yoz
+- Raqamli score ber (masalan "3/4 to'g'ri — 75%")
+- Har javob oxirida qisqa MASLAHAT ber
+- Qisqa va aniq bo'l, ortiqcha so'z ishlatma`,
+
+  grammar: `Sen SAT Writing & Grammar bo'limini o'qituvchi ustozsan. O'zbek tilida gaplash.
+
+QOIDALAR:
+- Qoida birinchi: 2-3 jumlada qoidani tushuntir (o'zbek+inglizcha misollar)
+- Keyin 3-4 ta real SAT uslubida grammatika savolini ber (A/B/C/D)
+- Eng ko'p tekshiriladigan mavzular: Subject-Verb Agreement, Parallel Structure, Punctuation, Pronoun reference, Modifier errors, Transition words
+- Foydalanuvchi javob berganda: batafsil tushuntir, nima uchun boshqa variantlar noto'g'ri
+- Score ber, maslahat ber
+- O'zbek tilida tushuntir`,
+
+  test: `Sen SAT aralash mini-test ustozisan. O'zbek tilida gaplash.
+
+QOIDALAR:
+- 5 ta savol berganda: 2-3 ta grammar + 2 ta reading savoli ber
+- Har savolda (A/B/C/D) variantlar bo'lsin
+- Foydalanuvchi javob bersa (masalan "1-A, 2-C, 3-B..."): har birini tekshir, batafsil tushuntir
+- Umumiy score ber: "X/5 — XX%"
+- Kuchsiz tomonni aniqlashga yordam ber
+- Rag'batlantiruvchi bo'l
+- O'zbek tilida gaplash`
+};
+
+// ── AI CHAT ──
+const chatHistories = { reading:[], grammar:[], test:[] };
+let isLoading = {};
+
+async function sendMsg(section) {
+  const input = document.getElementById(section + '-input');
+  const msg = input.value.trim();
+  if (!msg || isLoading[section]) return;
+  input.value = '';
+  appendMsg(section, 'user', msg);
+  await callAI(section, msg);
+}
+
+function sendQuick(section, msg) {
+  document.getElementById(section + '-input').value = msg;
+  sendMsg(section);
+}
+
+function handleKey(e, section) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(section); }
+}
+
+function appendMsg(section, role, html) {
+  const container = document.getElementById(section + '-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const avatar = role === 'ai' ? '🎓' : '👤';
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-bubble">${html}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function showLoading(section) {
+  const container = document.getElementById(section + '-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg ai'; div.id = section + '-loading';
+  div.innerHTML = `<div class="msg-avatar">🎓</div><div class="msg-bubble"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeLoading(section) {
+  const el = document.getElementById(section + '-loading');
+  if (el) el.remove();
+}
+
+async function callAI(section, userMsg) {
+  isLoading[section] = true;
+  const sendBtn = document.getElementById(section + '-send');
+  if (sendBtn) sendBtn.disabled = true;
+  showLoading(section);
+
+  chatHistories[section].push({ role: 'user', content: userMsg });
+  if (chatHistories[section].length > 20) chatHistories[section] = chatHistories[section].slice(-20);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEMS[section],
+        messages: chatHistories[section]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(c => c.text || '').join('') || 'Xatolik yuz berdi. Qayta urining.';
+    removeLoading(section);
+    chatHistories[section].push({ role: 'assistant', content: text });
+
+    // Format text
+    const formatted = formatAIText(text);
+    appendMsg(section, 'ai', formatted);
+
+    // XP
+    addXP(5);
+
+    // Parse score
+    const scoreMatch = text.match(/(\d+)\/(\d+)/);
+    if (scoreMatch) {
+      const pct = Math.round(parseInt(scoreMatch[1]) / parseInt(scoreMatch[2]) * 100);
+      ST.scores.push(pct); save(); updateStats();
+    }
+  } catch(e) {
+    removeLoading(section);
+    appendMsg(section, 'ai', '⚠️ Internetga ulanishda xatolik. Iltimos qayta urining.');
+  }
+
+  isLoading[section] = false;
+  if (sendBtn) sendBtn.disabled = false;
+}
+
+function formatAIText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/✅(.*)/g, '<span class="correct">✅$1</span>')
+    .replace(/❌(.*)/g, '<span class="wrong">❌$1</span>')
+    .replace(/`(.*?)`/g, '<span class="highlight">$1</span>')
+    .replace(/\n/g, '<br>');
+}
+
+// ── VOCAB DATA ──
+const VOCAB_LIST = [
+  { w:'Ambiguous', p:'/æmˈbɪɡjuəs/', t:'adjective', d:'Ikki xil talqin qilinadigan; noaniq', e:'The ending of the story was ambiguous — readers could not agree on its meaning.', uz:'Noaniq, ikki ma\'noli' },
+  { w:'Benevolent', p:'/bəˈnevələnt/', t:'adjective', d:'Mehribon, saxiy; boshqalarga yaxshilik qilishni istovchi', e:'The benevolent donor gave millions to the hospital.', uz:'Xayrli, mehribon' },
+  { w:'Concise', p:'/kənˈsaɪs/', t:'adjective', d:'Qisqa va aniq; keraksiz so\'zlarsiz', e:'A good essay should be concise and well-organized.', uz:'Qisqa va aniq' },
+  { w:'Diligent', p:'/ˈdɪlɪdʒənt/', t:'adjective', d:'Mehnatsevar, tirishqoq', e:'Diligent students review their notes every day.', uz:'Mehnatsevar' },
+  { w:'Elaborate', p:'/ɪˈlæbərət/', t:'adjective/verb', d:'Batafsil va murakkab; yoki batafsil tushuntirmoq', e:'Can you elaborate on your answer?', uz:'Batafsil; kengaytirmoq' },
+  { w:'Futile', p:'/ˈfjuːtaɪl/', t:'adjective', d:'Befoyda, natijavsiz', e:'Their attempts to stop the flood were futile.', uz:'Befoyda, hiyla-yo\'l bermaydi' },
+  { w:'Gregarious', p:'/ɡrɪˈɡeəriəs/', t:'adjective', d:'Odamsevar, jamoatchi', e:'She is gregarious and loves meeting new people.', uz:'Odamsevar, jamoatchi' },
+  { w:'Hypothesis', p:'/haɪˈpɒθɪsɪs/', t:'noun', d:'Ilmiy taxmin; tekshirilmagan nazariya', e:'The scientist formed a hypothesis before conducting experiments.', uz:'Faraz, gipoteza' },
+  { w:'Impartial', p:'/ɪmˈpɑːʃl/', t:'adjective', d:'Adolatli, bir tomonga og\'magan', e:'A judge must remain impartial during the trial.', uz:'Adolatli, betaraf' },
+  { w:'Justify', p:'/ˈdʒʌstɪfaɪ/', t:'verb', d:'Asoslash, to\'g\'riligini isbotlash', e:'Can you justify your decision with evidence?', uz:'Asoslamoq' },
+  { w:'Meticulous', p:'/məˈtɪkjʊləs/', t:'adjective', d:'Juda ehtiyotkor va aniq', e:'She was meticulous in checking every detail.', uz:'Juda aniq, ehtiyotkor' },
+  { w:'Nuance', p:'/ˈnjuːɑːns/', t:'noun', d:'Nozik farq yoki ma\'no', e:'The author captures the nuances of human emotion.', uz:'Nozik farq' },
+  { w:'Objective', p:'/əbˈdʒektɪv/', t:'adjective/noun', d:'Xolisona; shaxsiy his-tuyg\'usiz / Maqsad', e:'An objective analysis does not favor one side.', uz:'Xolisona; maqsad' },
+  { w:'Prevalent', p:'/ˈprevələnt/', t:'adjective', d:'Keng tarqalgan, ommaviy', e:'Smartphones are prevalent in modern society.', uz:'Keng tarqalgan' },
+  { w:'Refute', p:'/rɪˈfjuːt/', t:'verb', d:'Rad etmoq, inkor qilmoq (dalil bilan)', e:'The scientist refuted the old theory with new data.', uz:'Rad etmoq' },
+  { w:'Skeptical', p:'/ˈskeptɪkl/', t:'adjective', d:'Shubhali, ishonchsiz', e:'Many experts are skeptical of the new treatment.', uz:'Shubhali' },
+  { w:'Substantiate', p:'/səbˈstænʃieɪt/', t:'verb', d:'Isbotlamoq, tasdiqlash', e:'Please substantiate your claims with evidence.', uz:'Isbotlamoq' },
+  { w:'Tenuous', p:'/ˈtenjuəs/', t:'adjective', d:'Zaif, nozik (aloqa yoki argument)', e:'The connection between the two events is tenuous.', uz:'Zaif, nozik' },
+  { w:'Undermine', p:'/ˌʌndəˈmaɪn/', t:'verb', d:'Zaiflashtirmoq, yo\'q qilmoq (yashirincha)', e:'Constant criticism can undermine a person\'s confidence.', uz:'Zaiflashtirmoq' },
+  { w:'Volatile', p:'/ˈvɒlətaɪl/', t:'adjective', d:'O\'zgaruvchan, beqaror; yoki portlovchi', e:'The volatile stock market worried investors.', uz:'Beqaror, o\'zgaruvchan' },
+];
+
+let todayVocabSet = [];
+let vocabKnownToday = 0;
+
+function loadVocab(mode) {
+  const c = document.getElementById('vocabContent');
+  c.innerHTML = '';
+
+  if (mode === 'today') {
+    // Pick 10 words not yet known
+    const unknown = VOCAB_LIST.filter(v => !ST.wordsKnown.includes(v.w));
+    todayVocabSet = unknown.slice(0, 10);
+    if (todayVocabSet.length === 0) {
+      c.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink2);">🎉 Barcha so\'zlarni yodladingiz! Takrorlash rejimiga o\'ting.</div>';
+      return;
+    }
+    todayVocabSet.forEach(v => c.appendChild(makeVocabCard(v)));
+
+  } else if (mode === 'quiz') {
+    loadVocabQuiz(c);
+  } else if (mode === 'review') {
+    const known = VOCAB_LIST.filter(v => ST.wordsKnown.includes(v.w));
+    if (!known.length) {
+      c.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink2);">Hali yodlangan so\'z yo\'q. Avval "Bugungi 10 so\'z" ni o\'rganing.</div>';
+      return;
+    }
+    known.forEach(v => c.appendChild(makeVocabCard(v, true)));
+  }
+}
+
+function makeVocabCard(v, isReview) {
+  const div = document.createElement('div');
+  div.className = 'vocab-card' + (ST.wordsKnown.includes(v.w) ? ' known' : '');
+  div.innerHTML = `
+    <div class="vocab-word">${v.w}</div>
+    <div class="vocab-pron">${v.p}</div>
+    <div class="vocab-type">${v.t}</div>
+    <div class="vocab-tap">👆 Ko'rish uchun bosing</div>
+    <div class="vocab-hidden">
+      <div class="vocab-def">📌 <strong>Ma'nosi:</strong> ${v.d}</div>
+      <div style="margin:4px 0 10px;font-size:13px;color:var(--gold);">🇺🇿 ${v.uz}</div>
+      <div class="vocab-ex">"${v.e}"</div>
+      ${!ST.wordsKnown.includes(v.w) ? `<button class="vocab-known-btn" onclick="markKnown('${v.w}',this)">✓ Yodladim!</button>` : '<div style="font-size:12px;color:var(--green);margin-top:10px;">✅ Yodlangan</div>'}
+    </div>`;
+  div.addEventListener('click', function(e) {
+    if (e.target.classList.contains('vocab-known-btn')) return;
+    div.classList.toggle('revealed');
+  });
+  return div;
+}
+
+function markKnown(word, btn) {
+  if (!ST.wordsKnown.includes(word)) {
+    ST.wordsKnown.push(word);
+    vocabKnownToday++;
+    save(); updateStats();
+    addXP(10);
+    btn.closest('.vocab-card').classList.add('known');
+    btn.textContent = '✅ Yodlandi!';
+    btn.style.background = 'var(--green)';
+    btn.style.color = 'white';
+
+    const done = ST.wordsKnown.length;
+    const total = Math.min(todayVocabSet.length, 10);
+    const pct = Math.round(vocabKnownToday / total * 100);
+    document.getElementById('vocabProgressLabel').textContent = `${vocabKnownToday} / ${total} so'z`;
+    document.getElementById('vocabProgressBar').style.width = pct + '%';
+  }
+}
+
+// ── VOCAB QUIZ ──
+async function loadVocabQuiz(container) {
+  container.innerHTML = '<div style="padding:20px;color:var(--ink2);text-align:center;">⏳ Test tayyorlanmoqda...</div>';
+  const words = VOCAB_LIST.slice(0, 15);
+  const sample = words.sort(() => Math.random()-.5).slice(0,5);
+  const prompt = `Quyidagi 5 ta SAT so'zi bo'yicha multiple-choice test tuzib ber. Har bir savolda so'z gapda ishlatilgan va to'g'ri ma'nosini topish kerak. A/B/C/D variantlar ber. O'zbek tilida.
+
+So'zlar: ${sample.map(s=>s.w).join(', ')}
+
+Format:
+1. [Ibora]
+A) ...  B) ...  C) ...  D) ...
+
+(5 ta savol)`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Xatolik';
+    container.innerHTML = `
+      <div class="ai-box">
+        <div class="ai-messages" id="vocab-quiz-msgs" style="max-height:none;">
+          <div class="msg ai">
+            <div class="msg-avatar">🎓</div>
+            <div class="msg-bubble">${formatAIText(text)}</div>
+          </div>
+        </div>
+        <div class="ai-input-row">
+          <textarea class="ai-input" id="vocab-quiz-input" placeholder="Javoblaringiz: 1-A, 2-C, 3-B, 4-D, 5-A" onkeydown="handleVocabQuizKey(event)"></textarea>
+          <button class="send-btn" onclick="sendVocabQuizAnswer()">➤</button>
+        </div>
+      </div>`;
+    window._vocabQuizContext = text;
+  } catch(e) {
+    container.innerHTML = '<div style="padding:20px;color:var(--red);">Xatolik. Qayta urining.</div>';
+  }
+}
+
+function handleVocabQuizKey(e) {
+  if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendVocabQuizAnswer();}
+}
+
+async function sendVocabQuizAnswer() {
+  const input = document.getElementById('vocab-quiz-input');
+  const ans = input.value.trim(); if(!ans) return;
+  input.value='';
+  const msgs = document.getElementById('vocab-quiz-msgs');
+  const userDiv=document.createElement('div');
+  userDiv.className='msg user';
+  userDiv.innerHTML=`<div class="msg-avatar">👤</div><div class="msg-bubble">${ans}</div>`;
+  msgs.appendChild(userDiv);
+
+  const loadDiv=document.createElement('div');
+  loadDiv.className='msg ai';
+  loadDiv.innerHTML=`<div class="msg-avatar">🎓</div><div class="msg-bubble"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  msgs.appendChild(loadDiv);
+
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
+        messages:[
+          {role:'user',content:`Test: ${window._vocabQuizContext}\n\nFoydalanuvchi javoblari: ${ans}\n\nHar javobni tekshir, to'g'ri javobni ayt, tushuntir va score ber. O'zbek tilida.`}
+        ]})
+    });
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'Xatolik';
+    loadDiv.innerHTML=`<div class="msg-avatar">🎓</div><div class="msg-bubble">${formatAIText(text)}</div>`;
+    addXP(8);
+    msgs.scrollTop=msgs.scrollHeight;
+  } catch(e){
+    loadDiv.innerHTML=`<div class="msg-avatar">🎓</div><div class="msg-bubble">Xatolik yuz berdi.</div>`;
+  }
+}
+
+// ── INIT ──
+function initChat(section) {
+  const msgs = document.getElementById(section+'-msgs');
+  if (msgs.children.length === 0) {
+    const greetings = {
+      reading: 'Assalomu alaykum! Men SAT Reading ustozingman. 📖<br><br>Bugun siz bilan haqiqiy SAT uslubidagi passage va savollarni yechamiz. <strong>Qayerdan boshlaylik?</strong><br><br>👇 Pastdagi tugmalardan birini bosing yoki o\'z savolingizni yozing.',
+      grammar: 'Salom! SAT Grammar bo\'limiga xush kelibsiz! ✍️<br><br>Bu yerda eng ko\'p imtihonda chiqadigan grammatika qoidalarini o\'rganamiz va real savollar yechamiz.<br><br><strong>Qaysi mavzudan boshlaylik?</strong>',
+      test: 'Tayyor turgin! 🎯 Men SAT mini-test ustozingman.<br><br>Haqiqiy SAT uslubida savollar beraman, sen javob berasan — men har birini tushuntiraman.<br><br><strong>Qanday test kerak?</strong>'
+    };
+    appendMsg(section,'ai', greetings[section]);
+  }
+}
+
+// Check streak
+const today = new Date().toISOString().split('T')[0];
+if (ST.lastDay !== today) { ST.streak = ST.lastDay === new Date(Date.now()-86400000).toISOString().split('T')[0] ? ST.streak+1 : 1; ST.lastDay=today; save(); }
+
+// Init pages
+['reading','grammar','test'].forEach(s => {
+  const pg = document.getElementById('page-'+s);
+  const observer = new MutationObserver(()=>{ if(pg.classList.contains('active')) initChat(s); });
+  observer.observe(pg, {attributes:true, attributeFilter:['class']});
+});
+
+updateStats();
+</script>
+</body>
+</html>
